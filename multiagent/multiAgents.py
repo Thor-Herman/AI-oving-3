@@ -138,28 +138,29 @@ class MinimaxAgent(MultiAgentSearchAgent):
         value, action = self.maxValue(gameState, 0)
         return action
 
-    def maxValue(self, gameState):
-        if gameState.isWin() or gameState.isLose():
-            return self.evaluationFunction(gameState), None
+    def maxValue(self, gameState, currentDepth):
+        if gameState.isWin() or gameState.isLose() or currentDepth == self.depth:
+            # If game is over or we have reached desired depth
+            return self.evaluationFunction(gameState), None  # Return current value. No action possible
         v = float("-inf")
         legaLActions = gameState.getLegalActions(self.index)
         move = None
         for action in legaLActions:
-            v2, a2 = self.minValue(gameState.generateSuccessor(self.index, action), self.index + 1)
+            v2, a2 = self.minValue(gameState.generateSuccessor(self.index, action), self.index + 1, currentDepth)
             if v2 > v:
                 v, move = v2, action
         return v, move
 
-    def minValue(self, gameState, playerIndex):
-        if playerIndex > gameState.getNumAgents():  # Done min-val for all ghosts
-            return self.maxValue(gameState)  # Back to Pac-man
+    def minValue(self, gameState, playerIndex, currentDepth):
+        if playerIndex >= gameState.getNumAgents():  # Done min-val for all ghosts
+            return self.maxValue(gameState, currentDepth + 1)  # Back to Pac-man
         if gameState.isWin() or gameState.isLose():  # Terminal state
-            return self.evaluationFunction(gameState), None
+            return self.evaluationFunction(gameState), None  # No action possible
         v = float("inf")
-        legaLActions = gameState.getLegalActions(self.index)
+        legaLActions = gameState.getLegalActions(playerIndex)
         move = None
         for action in legaLActions:
-            v2, a2 = self.minValue(gameState.generateSuccessor(playerIndex, action), playerIndex + 1)
+            v2, a2 = self.minValue(gameState.generateSuccessor(playerIndex, action), playerIndex + 1, currentDepth)
             if v2 < v:
                 v, move = v2, action
         return v, move
