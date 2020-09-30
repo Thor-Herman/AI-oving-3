@@ -135,7 +135,35 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        value, action = self.maxValue(gameState, 0)
+        return action
+
+    def maxValue(self, gameState):
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState), None
+        v = float("-inf")
+        legaLActions = gameState.getLegalActions(self.index)
+        move = None
+        for action in legaLActions:
+            v2, a2 = self.minValue(gameState.generateSuccessor(self.index, action), self.index + 1)
+            if v2 > v:
+                v, move = v2, action
+        return v, move
+
+    def minValue(self, gameState, playerIndex):
+        if playerIndex > gameState.getNumAgents():  # Done min-val for all ghosts
+            return self.maxValue(gameState)  # Back to Pac-man
+        if gameState.isWin() or gameState.isLose():  # Terminal state
+            return self.evaluationFunction(gameState), None
+        v = float("inf")
+        legaLActions = gameState.getLegalActions(self.index)
+        move = None
+        for action in legaLActions:
+            v2, a2 = self.minValue(gameState.generateSuccessor(playerIndex, action), playerIndex + 1)
+            if v2 < v:
+                v, move = v2, action
+        return v, move
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
