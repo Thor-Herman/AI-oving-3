@@ -161,9 +161,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
         move = None
         for action in legaLActions:
             v2, a2 = self.minValue(gameState.generateSuccessor(playerIndex, action), playerIndex + 1, currentDepth)
+            # Call min for the next ghost with the same depth
             if v2 < v:
                 v, move = v2, action
-        return v, move
+        return v, move  # Value and the move that got it there
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -176,7 +177,43 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        value, action = self.maxValue(gameState, 0, float("-inf"), float("inf"))  # Start at depth 0
+        return action
+
+    def maxValue(self, gameState, depth, alpha, beta):
+        if gameState.isWin() or gameState.isLose() or depth == self.depth:
+            # If game is over or we have reached desired depth
+            return self.evaluationFunction(gameState), None  # Return current value. No action possible
+        v = float("-inf")  # Current best option for this branch
+        legaLActions = gameState.getLegalActions(self.index)  # Legal actions for pac-man
+        move = None
+        for action in legaLActions:
+            v2, a2 = self.minValue(gameState.generateSuccessor(self.index, action), self.index + 1, depth, alpha, beta)
+            # Actions taken by ghosts
+            if v2 > v:  # If current action led to better value than branch's best
+                v, move = v2, action  # Update current branch best
+            if v > beta:  # If the result is worse than the current best
+                return v, move  # Prune this branch
+            alpha = max(v, alpha)  # Update current overall best, alpha
+        return v, move
+
+    def minValue(self, gameState, playerIndex, currentDepth, alpha, beta):
+        if playerIndex >= gameState.getNumAgents():  # Done min-val for all ghosts
+            return self.maxValue(gameState, currentDepth + 1, alpha, beta)  # Back to Pac-man
+        if gameState.isWin() or gameState.isLose():  # Terminal state
+            return self.evaluationFunction(gameState), None  # No action possible
+        v = float("inf")
+        legaLActions = gameState.getLegalActions(playerIndex)  # Possible actions for current player
+        move = None
+        for action in legaLActions:
+            v2, a2 = self.minValue(gameState.generateSuccessor(playerIndex, action), playerIndex + 1, currentDepth, alpha, beta)
+            # Call min for the next ghost with the same depth
+            if v2 < v:  # If the current choice is better than current best for this branch
+                v, move = v2, action  # Update best current
+            if v < alpha:  # If the result is worse than the current best
+                return v, move  # Prune this branch
+            beta = min(v, beta)  # Was the current v a better choice than our best current option, beta?
+        return v, move  # Value and the move that got it there
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
